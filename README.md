@@ -70,13 +70,12 @@ and notebook in this repo.
 - Object metric: I locate the green box (centroid of the pixels where green exceeds red and blue by 0.07, green
   above 0.20, at least 3 pixels) in real and predicted frames, over windows where the real box moves by more than
   3 px. I report the median position error where the box is found in the prediction. The thresholds were adjusted
-  after looking at frames from one training video and one test video. This metric is computed in the notebook
-  only. The box is sometimes not detected once it is inside the bowl (seen through the glass), which removes
+  after looking at frames from one training video and one test video. This metric is computed in the Colab session only (see Reproduce). The box is sometimes not detected once it is inside the bowl (seen through the glass), which removes
   those windows.
 
 ## Results
 
-Validation (start positions seen in training, repetition 5, 0.4 s, whole image, 512 fixed windows):
+Validation (start positions seen in training, repetition 5, 0.4 s, whole image, all windows of the 6 validation videos (every third frame as a start, 292 windows)):
 copy last frame 0.0043, model without hand 0.0032, model with hand 0.0024.
 
 Test (start positions 03 and 06, never seen in training, 10 videos, one training run per model). Mean absolute
@@ -154,7 +153,8 @@ about 1 s. With the hand of another video, ghost hands and several green blobs a
 - `src/00_check_videos.py` ... `src/05_prepare_wm.py`: video check, calibration, hand tracking, trajectories,
   release height, world-model data. `src/06_evaluate_wm.py`: evaluation on CPU. `src/diagnostics/`: checks I
   used along the way.
-- `notebooks/world_model.ipynb`: training of both models, object metric, rollouts (Colab).
+- `src/07_train_wm.py`: trains the two models (writes to `checkpoints_retrain/`).
+- `notebooks/colab_session.ipynb`: the raw Colab session I used (see Reproduce).
 - `checkpoints/`: `wm_act.pt` (with hand), `wm_noact.pt` (without hand).
 - `data/processed/`: `calib.npz`, `traj_*.npz`, `wm_data.npz`.
 - `results/`: figures.
@@ -165,9 +165,14 @@ The data pipeline needs the raw videos, which are not in this repo. The training
 Evaluation (CPU, no raw videos): `pip install -r requirements.txt torch`, then `python src/06_evaluate_wm.py`.
 It loads `data/processed/wm_data.npz` and the checkpoints, and writes the curves and the rollout in `results/`.
 
-Training and object metric (GPU): open `notebooks/world_model.ipynb` in Colab, upload
-`data/processed/wm_data.npz` to `/content`, and run the cells in order (cells 6 and 7 train the two models, cell 9
-computes the object metric).
+Training (GPU recommended, about 24 minutes per model on a Colab T4): `python src/07_train_wm.py`. It writes to
+`checkpoints_retrain/`, not over the committed checkpoints, and results will not be bit-identical (hardware, random
+streams). Quick check on CPU: `python src/07_train_wm.py --steps 20 --bs 8 --models act --out /tmp/wm_smoke`.
+
+The object metric (green box) was computed in the Colab session saved as `notebooks/colab_session.ipynb`. That
+notebook is raw: two of its cells (data loading and evaluation) were cut short when I saved it, so it cannot be
+re-run top to bottom. The object-metric code is in it, but this one number is not reproducible from the repo as it
+stands.
 
 Data pipeline (needs the raw videos in `data/raw/`):
 ```
