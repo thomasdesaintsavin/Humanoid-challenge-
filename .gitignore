@@ -1,0 +1,10 @@
+models/
+results/*.zip
+results/*.mp4
+data/processed/pickplace_*.npz
+data/processed/calib_*.npz
+.venv/
+data/raw/
+__pycache__/
+*.pyc
+.DS_Store
